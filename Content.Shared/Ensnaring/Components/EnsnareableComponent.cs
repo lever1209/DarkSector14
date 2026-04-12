@@ -17,6 +17,12 @@ public sealed partial class EnsnareableComponent : Component
     public float WalkSpeed = 1.0f;
 
     /// <summary>
+    /// How much should this slow down the entities jog?
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float JogSpeed = 1.0f;
+
+    /// <summary>
     /// How much should this slow down the entities sprint?
     /// </summary>
     [DataField, AutoNetworkedField]

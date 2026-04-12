@@ -16,6 +16,12 @@ public sealed partial class SpeedModifiedOnWieldComponent : Component
     public float SprintModifier = 1f;
 
     /// <summary>
+    /// How much the wielder's jog speed is modified when the component owner is wielded.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float JogModifier = 1f;
+
+    /// <summary>
     /// How much the wielder's walk speed is modified when the component owner is wielded.
     /// </summary>
     [DataField, AutoNetworkedField]

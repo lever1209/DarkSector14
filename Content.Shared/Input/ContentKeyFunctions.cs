@@ -133,5 +133,8 @@ namespace Content.Shared.Input
         public static readonly BoundKeyFunction MappingRemoveDecal = "MappingRemoveDecal";
         public static readonly BoundKeyFunction MappingCancelEraseDecal = "MappingCancelEraseDecal";
         public static readonly BoundKeyFunction MappingOpenContextMenu = "MappingOpenContextMenu";
+        // _dsect controls
+        public static readonly BoundKeyFunction Sprint = "Sprint"; // _dsect feature: sprinting
+        // _dsect end controls
     }
 }

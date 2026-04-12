@@ -15,7 +15,9 @@ namespace Content.Shared.Movement.Components
         [DataField] public float PushStrength = 600f;
 
         [DataField, AutoNetworkedField]
-        public float StepSoundMoveDistanceRunning = 2;
+        public float StepSoundMoveDistanceSprinting = 2.5f; // TODO come back and tweak based on gameplay, added .5 to slower value to match the pattern of 1.5 slowest to 2.0 medium value
+        [DataField, AutoNetworkedField]
+        public float StepSoundMoveDistanceJogging = 2;
 
         [DataField, AutoNetworkedField]
         public float StepSoundMoveDistanceWalking = 1.5f;

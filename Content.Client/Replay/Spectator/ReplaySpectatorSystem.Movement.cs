@@ -97,7 +97,7 @@ public sealed partial class ReplaySpectatorSystem
         var parentRotation = _mover.GetParentGridAngle(mover);
         var localVec = effectiveDir.AsDir().ToAngle().ToWorldVec();
         var worldVec = parentRotation.RotateVec(localVec);
-        var speed = CompOrNull<MovementSpeedModifierComponent>(player)?.BaseSprintSpeed ?? DefaultSpeed;
+        var speed = CompOrNull<MovementSpeedModifierComponent>(player)?.BaseJogSpeed ?? DefaultSpeed;
         var delta = worldVec * frameTime * speed;
         _transform.SetWorldPositionRotation(player, pos + delta, delta.ToWorldAngle(), xform);
     }

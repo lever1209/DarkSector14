@@ -117,20 +117,23 @@ namespace Content.Shared.Movement.Systems
             RaiseLocalEvent(uid, ev);
 
             if (MathHelper.CloseTo(ev.WalkSpeedModifier, move.WalkSpeedModifier) &&
+                MathHelper.CloseTo(ev.JogSpeedModifier, move.JogSpeedModifier) &&
                 MathHelper.CloseTo(ev.SprintSpeedModifier, move.SprintSpeedModifier))
                 return;
 
             move.WalkSpeedModifier = ev.WalkSpeedModifier;
+            move.JogSpeedModifier = ev.JogSpeedModifier;
             move.SprintSpeedModifier = ev.SprintSpeedModifier;
             Dirty(uid, move);
         }
 
-        public void ChangeBaseSpeed(EntityUid uid, float baseWalkSpeed, float baseSprintSpeed, float acceleration, MovementSpeedModifierComponent? move = null)
+        public void ChangeBaseSpeed(EntityUid uid, float baseWalkSpeed, float baseJogSpeed, float baseSprintSpeed, float acceleration, MovementSpeedModifierComponent? move = null)
         {
             if (!Resolve(uid, ref move, false))
                 return;
 
             move.BaseWalkSpeed = baseWalkSpeed;
+            move.BaseJogSpeed = baseJogSpeed;
             move.BaseSprintSpeed = baseSprintSpeed;
             move.Acceleration = acceleration;
             Dirty(uid, move);
@@ -186,17 +189,19 @@ namespace Content.Shared.Movement.Systems
         public SlotFlags TargetSlots { get; } = ~SlotFlags.POCKET;
 
         public float WalkSpeedModifier { get; private set; } = 1.0f;
+        public float JogSpeedModifier { get; private set; } = 1.0f;
         public float SprintSpeedModifier { get; private set; } = 1.0f;
 
-        public void ModifySpeed(float walk, float sprint)
+        public void ModifySpeed(float walk, float jog, float sprint)
         {
             WalkSpeedModifier *= walk;
+            JogSpeedModifier *= jog;
             SprintSpeedModifier *= sprint;
         }
 
         public void ModifySpeed(float mod)
         {
-            ModifySpeed(mod, mod);
+            ModifySpeed(mod, mod, mod);
         }
     }
 

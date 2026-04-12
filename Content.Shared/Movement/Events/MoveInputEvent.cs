@@ -12,7 +12,7 @@ public readonly struct MoveInputEvent
     public readonly Entity<InputMoverComponent> Entity;
     public readonly MoveButtons OldMovement;
 
-    public bool HasDirectionalMovement => (Entity.Comp.HeldMoveButtons & MoveButtons.AnyDirection) != MoveButtons.None;
+    public bool HasDirectionalMovement => Entity.Comp.HasDirectionalMovement; // TODO is this extra variable really needed?
 
     public MoveInputEvent(Entity<InputMoverComponent> entity, MoveButtons oldMovement)
     {

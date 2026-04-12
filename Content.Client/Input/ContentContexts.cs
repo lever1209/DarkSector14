@@ -57,6 +57,7 @@ namespace Content.Client.Input
             human.AddFunction(EngineKeyFunctions.MoveLeft);
             human.AddFunction(EngineKeyFunctions.MoveRight);
             human.AddFunction(EngineKeyFunctions.Walk);
+            human.AddFunction(ContentKeyFunctions.Sprint); // _dsect feature: sprinting
             human.AddFunction(ContentKeyFunctions.ToggleKnockdown);
             human.AddFunction(ContentKeyFunctions.SwapHands);
             human.AddFunction(ContentKeyFunctions.SwapHandsReverse);

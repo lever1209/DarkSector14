@@ -17,6 +17,12 @@ public sealed partial class SpeedModifierContactsComponent : Component
     public float WalkSpeedModifier = 1.0f;
 
     /// <summary>
+    /// The modifier applied to the jog speed of entities that come into contact with the entity this component is added to.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float JogSpeedModifier = 1.0f;
+
+    /// <summary>
     /// The modifier applied to the sprint speed of entities that come into contact with the entity this component is added to.
     /// </summary>
     [DataField, AutoNetworkedField]

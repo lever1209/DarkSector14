@@ -52,7 +52,7 @@ public sealed class MovementModStatusSystem : EntitySystem
         ref StatusEffectRelayedEvent<RefreshMovementSpeedModifiersEvent> args
     )
     {
-        args.Args.ModifySpeed(entity.Comp.WalkSpeedModifier, entity.Comp.WalkSpeedModifier);
+        args.Args.ModifySpeed(entity.Comp.WalkSpeedModifier, entity.Comp.JogSpeedModifier, entity.Comp.SprintSpeedModifier);
     }
 
     private void OnRefreshFrictionStatus(Entity<FrictionStatusEffectComponent> ent, ref StatusEffectRelayedEvent<RefreshFrictionModifiersEvent> args)
@@ -168,7 +168,7 @@ public sealed class MovementModStatusSystem : EntitySystem
         if (!Resolve(status, ref status.Comp))
             return false;
 
-        status.Comp.SprintSpeedModifier = sprintSpeedModifier;
+        status.Comp.JogSpeedModifier = sprintSpeedModifier; // TODO finish adding sprint support and renaming vars to fit the rename sprint -> jog
         status.Comp.WalkSpeedModifier = walkSpeedModifier;
 
         _movementSpeedModifier.RefreshMovementSpeedModifiers(uid);

@@ -593,7 +593,7 @@ namespace Content.Shared.Interaction
                 return false;
 
             // Only rotate to face if they're not moving.
-            if (!HasComp<NoRotateOnInteractComponent>(user) && (!TryComp(user, out InputMoverComponent? mover) || (mover.HeldMoveButtons & MoveButtons.AnyDirection) == 0x0))
+            if (!HasComp<NoRotateOnInteractComponent>(user) && (!TryComp(user, out InputMoverComponent? mover) || mover.HasDirectionalMovement))
             {
                 _rotateToFaceSystem.TryFaceCoordinates(user, _transform.ToMapCoordinates(coordinates).Position);
             }

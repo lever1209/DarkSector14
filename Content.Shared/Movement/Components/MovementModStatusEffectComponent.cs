@@ -18,6 +18,12 @@ public sealed partial class MovementModStatusEffectComponent : Component
     public float SprintSpeedModifier = 0.5f;
 
     /// <summary>
+    /// Multiplicative sprint modifier, with bounds of [0, 1)
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float JogSpeedModifier = 0.5f;
+
+    /// <summary>
     /// Multiplicative walk modifier, with bounds of [0, 1)
     /// </summary>
     [DataField, AutoNetworkedField]

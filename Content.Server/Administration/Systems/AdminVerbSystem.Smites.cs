@@ -841,7 +841,7 @@ public sealed partial class AdminVerbSystem
             Act = () =>
             {
                 var movementSpeed = EnsureComp<MovementSpeedModifierComponent>(args.Target);
-                (movementSpeed.BaseSprintSpeed, movementSpeed.BaseWalkSpeed) = (movementSpeed.BaseWalkSpeed, movementSpeed.BaseSprintSpeed);
+                (movementSpeed.BaseJogSpeed, movementSpeed.BaseWalkSpeed) = (movementSpeed.BaseWalkSpeed, movementSpeed.BaseJogSpeed);
 
                 Dirty(args.Target, movementSpeed);
 
@@ -892,7 +892,7 @@ public sealed partial class AdminVerbSystem
             Act = () =>
             {
                 var movementSpeed = EnsureComp<MovementSpeedModifierComponent>(args.Target);
-                _movementSpeedModifierSystem?.ChangeBaseSpeed(args.Target, 400, 8000, 40, movementSpeed);
+                _movementSpeedModifierSystem?.ChangeBaseSpeed(args.Target, 400, 8000, 16000, 40, movementSpeed);
 
                 _popupSystem.PopupEntity(Loc.GetString("admin-smite-super-speed-prompt"), args.Target,
                     args.Target, PopupType.LargeCaution);
@@ -1064,7 +1064,7 @@ public sealed partial class AdminVerbSystem
             {
                 var speed = 5f; // slightly faster than default sprint speed 4.5
                 if (TryComp<MovementSpeedModifierComponent>(args.Target, out var movement))
-                    speed = movement.CurrentSprintSpeed + 0.001f;// run
+                    speed = movement.CurrentJogSpeed + 0.001f;// run
                 var distance = 200f; // its kinda slow so were just gonna cheat a bit.
                 HomingLaunchSequence(args.Target, "ImmovableRodKeepTiles", distance, speed);
             },

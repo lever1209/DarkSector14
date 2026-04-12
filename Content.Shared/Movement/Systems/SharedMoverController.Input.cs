@@ -26,6 +26,7 @@ namespace Content.Shared.Movement.Systems
         public bool CameraRotationLocked { get; set; }
 
         public static ProtoId<AlertPrototype> WalkingAlert = "Walking";
+        public static ProtoId<AlertPrototype> SprintingAlert = "Sprinting";
 
         private void InitializeInput()
         {
@@ -40,6 +41,7 @@ namespace Content.Shared.Movement.Systems
                 .Bind(EngineKeyFunctions.MoveRight, moveRightCmdHandler)
                 .Bind(EngineKeyFunctions.MoveDown, moveDownCmdHandler)
                 .Bind(EngineKeyFunctions.Walk, new WalkInputCmdHandler(this))
+                .Bind(ContentKeyFunctions.Sprint, new SprintInputCmdHandler(this)) // _dsect addition: sprinting
                 .Bind(EngineKeyFunctions.CameraRotateLeft, new CameraRotateInputCmdHandler(this, Direction.East))
                 .Bind(EngineKeyFunctions.CameraRotateRight, new CameraRotateInputCmdHandler(this, Direction.West))
                 .Bind(EngineKeyFunctions.CameraReset, new CameraResetInputCmdHandler(this))
@@ -352,7 +354,7 @@ namespace Content.Shared.Movement.Systems
             entity.Comp.TargetRelativeRotation = Angle.Zero;
         }
 
-        private void HandleRunChange(EntityUid uid, ushort subTick, bool walking)
+        private void HandleWalkingChange(EntityUid uid, ushort subTick, bool walking)
         {
             MoverQuery.TryGetComponent(uid, out var moverComp);
 
@@ -364,16 +366,36 @@ namespace Content.Shared.Movement.Systems
                     SetMoveInput((uid, moverComp), MoveButtons.None);
                 }
 
-                HandleRunChange(relayMover.RelayEntity, subTick, walking);
+                HandleWalkingChange(relayMover.RelayEntity, subTick, walking);
                 return;
             }
 
             if (moverComp == null) return;
 
-            SetSprinting((uid, moverComp), subTick, walking);
+            SetWalking((uid, moverComp), subTick, walking);
+        }
+        private void HandleSprintingChange(EntityUid uid, ushort subTick, bool sprinting)
+        {
+            MoverQuery.TryGetComponent(uid, out var moverComp);
+
+            if (TryComp<RelayInputMoverComponent>(uid, out var relayMover))
+            {
+                // if we swap to relay then stop our existing input if we ever change back.
+                if (moverComp != null)
+                {
+                    SetMoveInput((uid, moverComp), MoveButtons.None);
+                }
+
+                HandleSprintingChange(relayMover.RelayEntity, subTick, sprinting);
+                return;
+            }
+
+            if (moverComp == null) return;
+
+            SetSprinting((uid, moverComp), subTick, sprinting);
         }
 
-        public (Vector2 Walking, Vector2 Sprinting) GetVelocityInput(InputMoverComponent mover)
+        public (Vector2 Walking, Vector2 Jogging, Vector2 Sprinting) GetVelocityInput(InputMoverComponent mover)
         {
             if (!Timing.InSimulation)
             {
@@ -381,24 +403,37 @@ namespace Content.Shared.Movement.Systems
                 // So return a full-length vector as if it's a full tick.
                 // Physics system will have the correct time step anyways.
                 var immediateDir = DirVecForButtons(mover.HeldMoveButtons);
-                return mover.Sprinting ? (Vector2.Zero, immediateDir) : (immediateDir, Vector2.Zero);
+
+                if (mover.Sprinting)
+                {
+                    return (Vector2.Zero, Vector2.Zero, immediateDir);
+                }
+                if (mover.Walking)
+                {
+                    return (immediateDir, Vector2.Zero, Vector2.Zero);
+                }
+
+                return (Vector2.Zero, immediateDir, Vector2.Zero);
             }
 
             Vector2 walk;
+            Vector2 jog;
             Vector2 sprint;
             float remainingFraction;
 
             if (Timing.CurTick > mover.LastInputTick)
             {
                 walk = Vector2.Zero;
+                jog = Vector2.Zero;
                 sprint = Vector2.Zero;
                 remainingFraction = 1;
             }
             else
             {
                 walk = mover.CurTickWalkMovement;
+                jog = mover.CurTickJogMovement;
                 sprint = mover.CurTickSprintMovement;
-                remainingFraction = (ushort.MaxValue - mover.LastInputSubTick) / (float) ushort.MaxValue;
+                remainingFraction = (ushort.MaxValue - mover.LastInputSubTick) / (float)ushort.MaxValue;
             }
 
             var curDir = DirVecForButtons(mover.HeldMoveButtons) * remainingFraction;
@@ -407,13 +442,17 @@ namespace Content.Shared.Movement.Systems
             {
                 sprint += curDir;
             }
-            else
+            else if (mover.Walking)
             {
                 walk += curDir;
             }
+            else if (mover.Jogging)
+            {
+                jog += curDir;
+            }
 
             // Logger.Info($"{curDir}{walk}{sprint}");
-            return (walk, sprint);
+            return (walk, jog, sprint);
         }
 
         /// <summary>
@@ -446,7 +485,16 @@ namespace Content.Shared.Movement.Systems
             {
                 var fraction = (subTick - entity.Comp.LastInputSubTick) / (float) ushort.MaxValue;
 
-                ref var lastMoveAmount = ref entity.Comp.Sprinting ? ref entity.Comp.CurTickSprintMovement : ref entity.Comp.CurTickWalkMovement;
+                ref var lastMoveAmount = ref entity.Comp.CurTickJogMovement; // _dsect feature: sprinting
+
+                if (entity.Comp.Sprinting)
+                {
+                    lastMoveAmount = ref entity.Comp.CurTickSprintMovement;
+                }
+                else if (entity.Comp.Walking)
+                {
+                    lastMoveAmount = ref entity.Comp.CurTickWalkMovement;
+                }
 
                 lastMoveAmount += DirVecForButtons(entity.Comp.HeldMoveButtons) * fraction;
 
@@ -472,16 +520,24 @@ namespace Content.Shared.Movement.Systems
             if (Timing.CurTick <= component.LastInputTick) return;
 
             component.CurTickWalkMovement = Vector2.Zero;
+            component.CurTickJogMovement = Vector2.Zero;
             component.CurTickSprintMovement = Vector2.Zero;
             component.LastInputTick = Timing.CurTick;
             component.LastInputSubTick = 0;
         }
 
-        public virtual void SetSprinting(Entity<InputMoverComponent> entity, ushort subTick, bool walking)
+        public virtual void SetWalking(Entity<InputMoverComponent> entity, ushort subTick, bool walking)
+        {
+            // Logger.Info($"[{_gameTiming.CurTick}/{subTick}] Walk: {enabled}");
+
+            SetMoveInput(entity, subTick, walking, MoveButtons.Walk);
+        }
+
+        public virtual void SetSprinting(Entity<InputMoverComponent> entity, ushort subTick, bool sprinting)
         {
             // Logger.Info($"[{_gameTiming.CurTick}/{subTick}] Sprint: {enabled}");
 
-            SetMoveInput(entity, subTick, walking, MoveButtons.Walk);
+            SetMoveInput(entity, subTick, sprinting, MoveButtons.Sprint);
         }
 
         /// <summary>
@@ -598,7 +654,25 @@ namespace Content.Shared.Movement.Systems
             {
                 if (session?.AttachedEntity == null) return false;
 
-                _controller.HandleRunChange(session.AttachedEntity.Value, message.SubTick, message.State == BoundKeyState.Down);
+                _controller.HandleWalkingChange(session.AttachedEntity.Value, message.SubTick, message.State == BoundKeyState.Down);
+                return false;
+            }
+        }
+
+        private sealed class SprintInputCmdHandler : InputCmdHandler
+        {
+            private SharedMoverController _controller;
+
+            public SprintInputCmdHandler(SharedMoverController controller)
+            {
+                _controller = controller;
+            }
+
+            public override bool HandleCmdMessage(IEntityManager entManager, ICommonSession? session, IFullInputCmdMessage message)
+            {
+                if (session?.AttachedEntity == null) return false;
+
+                _controller.HandleSprintingChange(session.AttachedEntity.Value, message.SubTick, message.State == BoundKeyState.Down);
                 return false;
             }
         }
@@ -628,12 +702,13 @@ namespace Content.Shared.Movement.Systems
     [Serializable, NetSerializable]
     public enum MoveButtons : byte
     {
-        None = 0,
-        Up = 1,
-        Down = 2,
-        Left = 4,
-        Right = 8,
-        Walk = 16,
+        None = 1 << 0,
+        Up = 1 << 1,
+        Down = 1 << 2,
+        Left = 1 << 3,
+        Right = 1 << 4,
+        Walk = 1 << 5,
+        Sprint = 1 << 6,
         AnyDirection = Up | Down | Left | Right,
     }
 

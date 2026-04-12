@@ -62,7 +62,7 @@ public sealed class SpeedModifierContactsSystem : EntitySystem
             return;
 
         component.WalkSpeedModifier = walkSpeed;
-        component.SprintSpeedModifier = sprintSpeed;
+        component.JogSpeedModifier = sprintSpeed; // TODO come back and finish implementing sprinting and renaming the old sprint to jog
         Dirty(uid, component);
         _toUpdate.UnionWith(_physics.GetContactingEntities(uid));
     }
@@ -82,6 +82,7 @@ public sealed class SpeedModifierContactsSystem : EntitySystem
             return;
 
         var walkSpeed = 0.0f;
+        var jogSpeed = 0.0f;
         var sprintSpeed = 0.0f;
 
         // Cache the result of the airborne check, as it's expensive and independent of contacting entities, hence need only be done once.
@@ -103,6 +104,7 @@ public sealed class SpeedModifierContactsSystem : EntitySystem
                     continue;
 
                 walkSpeed += slowContactsComponent.WalkSpeedModifier;
+                jogSpeed += slowContactsComponent.JogSpeedModifier;
                 sprintSpeed += slowContactsComponent.SprintSpeedModifier;
                 speedModified = true;
             }
@@ -116,6 +118,7 @@ public sealed class SpeedModifierContactsSystem : EntitySystem
                 if (!MathHelper.CloseTo(evSlippery.SlowdownModifier, 1))
                 {
                     walkSpeed += evSlippery.SlowdownModifier;
+                    jogSpeed += evSlippery.SlowdownModifier;
                     sprintSpeed += evSlippery.SlowdownModifier;
                     speedModified = true;
                 }
@@ -128,18 +131,20 @@ public sealed class SpeedModifierContactsSystem : EntitySystem
             }
         }
 
-        if (entries > 0 && (!MathHelper.CloseTo(walkSpeed, entries) || !MathHelper.CloseTo(sprintSpeed, entries)))
+        if (entries > 0 && (!MathHelper.CloseTo(walkSpeed, entries) || !MathHelper.CloseTo(jogSpeed, entries) || !MathHelper.CloseTo(sprintSpeed, entries)))
         {
             walkSpeed /= entries;
+            jogSpeed /= entries;
             sprintSpeed /= entries;
 
             var evMax = new GetSpeedModifierContactCapEvent();
             RaiseLocalEvent(uid, ref evMax);
 
             walkSpeed = MathF.Max(walkSpeed, evMax.MaxWalkSlowdown);
+            jogSpeed = MathF.Max(jogSpeed, evMax.MaxJogSlowdown);
             sprintSpeed = MathF.Max(sprintSpeed, evMax.MaxSprintSlowdown);
 
-            args.ModifySpeed(walkSpeed, sprintSpeed);
+            args.ModifySpeed(walkSpeed, jogSpeed, sprintSpeed);
         }
 
         // no longer colliding with anything

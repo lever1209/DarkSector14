@@ -32,7 +32,7 @@ public sealed class ClothingSpeedModifierSystem : EntitySystem
 
     private void OnGetState(EntityUid uid, ClothingSpeedModifierComponent component, ref ComponentGetState args)
     {
-        args.State = new ClothingSpeedModifierComponentState(component.WalkModifier, component.SprintModifier);
+        args.State = new ClothingSpeedModifierComponentState(component.WalkModifier, component.JogModifier); // TODO sprint speed modifiers here?
     }
 
     private void OnHandleState(EntityUid uid, ClothingSpeedModifierComponent component, ref ComponentHandleState args)
@@ -40,11 +40,11 @@ public sealed class ClothingSpeedModifierSystem : EntitySystem
         if (args.Current is not ClothingSpeedModifierComponentState state)
             return;
 
-        var diff = !MathHelper.CloseTo(component.SprintModifier, state.SprintModifier) ||
+        var diff = !MathHelper.CloseTo(component.JogModifier, state.SprintModifier) ||
                    !MathHelper.CloseTo(component.WalkModifier, state.WalkModifier);
 
         component.WalkModifier = state.WalkModifier;
-        component.SprintModifier = state.SprintModifier;
+        component.JogModifier = state.SprintModifier;
 
         // Avoid raising the event for the container if nothing changed.
         // We'll still set the values in case they're slightly different but within tolerance.
@@ -62,7 +62,7 @@ public sealed class ClothingSpeedModifierSystem : EntitySystem
         if (component.Standing != null && !_standing.IsMatchingState(args.Owner, component.Standing.Value))
             return;
 
-        args.Args.ModifySpeed(component.WalkModifier, component.SprintModifier);
+        args.Args.ModifySpeed(component.WalkModifier, component.JogModifier, component.SprintModifier);
     }
 
     private void OnClothingVerbExamine(EntityUid uid, ClothingSpeedModifierComponent component, GetVerbsEvent<ExamineVerb> args)
@@ -71,7 +71,7 @@ public sealed class ClothingSpeedModifierSystem : EntitySystem
             return;
 
         var walkModifierPercentage = MathF.Round((1.0f - component.WalkModifier) * 100f, 1);
-        var sprintModifierPercentage = MathF.Round((1.0f - component.SprintModifier) * 100f, 1);
+        var sprintModifierPercentage = MathF.Round((1.0f - component.JogModifier) * 100f, 1);
 
         if (walkModifierPercentage == 0.0f && sprintModifierPercentage == 0.0f)
             return;

@@ -271,12 +271,13 @@ public abstract partial class SharedBorgSystem : EntitySystem
         if (!TryComp<MovementSpeedModifierComponent>(chassis, out var movement))
             return;
 
-        if (movement.BaseSprintSpeed == 0f)
+        if (movement.BaseJogSpeed == 0f)
             return; // We already cannot move.
 
         // Slow down to walk speed.
+        var jogDif = movement.BaseWalkSpeed / movement.BaseJogSpeed;
         var sprintDif = movement.BaseWalkSpeed / movement.BaseSprintSpeed;
-        args.ModifySpeed(1f, sprintDif);
+        args.ModifySpeed(1f, jogDif, sprintDif);
     }
 
     private void OnUIOpenAttempt(Entity<BorgChassisComponent> chassis, ref ActivatableUIOpenAttemptEvent args)

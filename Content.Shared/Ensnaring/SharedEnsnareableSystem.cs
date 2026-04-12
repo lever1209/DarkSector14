@@ -103,7 +103,7 @@ public abstract class SharedEnsnareableSystem : EntitySystem
     private void OnEnsnare(EntityUid uid, EnsnareableComponent component, EnsnareEvent args)
     {
         component.WalkSpeed *= args.WalkSpeed;
-        component.SprintSpeed *= args.SprintSpeed;
+        component.JogSpeed *= args.SprintSpeed; // TODO more sprint changes here
 
         _speedModifier.RefreshMovementSpeedModifiers(uid);
 
@@ -114,7 +114,7 @@ public abstract class SharedEnsnareableSystem : EntitySystem
     private void OnEnsnareRemove(EntityUid uid, EnsnareableComponent component, EnsnareRemoveEvent args)
     {
         component.WalkSpeed /= args.WalkSpeed;
-        component.SprintSpeed /= args.SprintSpeed;
+        component.JogSpeed /= args.SprintSpeed;
 
         _speedModifier.RefreshMovementSpeedModifiers(uid);
 
@@ -138,7 +138,7 @@ public abstract class SharedEnsnareableSystem : EntitySystem
         if (!component.IsEnsnared)
             return;
 
-        args.ModifySpeed(component.WalkSpeed, component.SprintSpeed);
+        args.ModifySpeed(component.WalkSpeed, component.JogSpeed, component.SprintSpeed);
     }
 
     /// <summary>

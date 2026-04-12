@@ -58,7 +58,7 @@ public sealed class HungerSystem : EntitySystem
         if (_jetpack.IsUserFlying(uid))
             return;
 
-        args.ModifySpeed(component.StarvingSlowdownModifier, component.StarvingSlowdownModifier);
+        args.ModifySpeed(component.StarvingSlowdownModifier, component.StarvingSlowdownModifier, component.StarvingSlowdownModifier);
     }
 
     private void OnRejuvenate(EntityUid uid, HungerComponent component, RejuvenateEvent args)

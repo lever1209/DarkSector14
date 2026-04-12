@@ -1,0 +1,8 @@
+- type: alert
+  id: Sprinting
+  icons:
+  - sprite: /Textures/_dsect/Interface/Alerts/Sprinting.rsi
+    state: sprinting
+  name: alerts-sprinting-name
+  description: alerts-sprinting-desc
+  clientHandled: true

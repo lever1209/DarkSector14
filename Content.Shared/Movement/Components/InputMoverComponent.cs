@@ -33,7 +33,13 @@ namespace Content.Shared.Movement.Components
         public ushort LastInputSubTick;
 
         public Vector2 CurTickWalkMovement;
+        public Vector2 CurTickJogMovement;
         public Vector2 CurTickSprintMovement;
+        public const float WalkingSoundModifier = 1.5f;
+        public const float JoggingSoundModifier = 3.5f;
+        public const float SprintingSoundModifier = 5.5f; // TODO double check value
+        public bool Walking => (HeldMoveButtons & MoveButtons.Walk) != 0; // FIXME inverting here causes ghosts and aghosts to flip their default walk/jog states, and i cant figure out where it is to fix it there
+        public bool Sprinting => (HeldMoveButtons & MoveButtons.Sprint) != 0;
 
         public MoveButtons HeldMoveButtons = MoveButtons.None;
 
@@ -76,10 +82,6 @@ namespace Content.Shared.Movement.Components
         public TimeSpan LerpTarget;
 
         public const float LerpTime = 1.0f;
-        public const float SprintingSoundModifier = 3.5f;
-        public const float WalkingSoundModifier = 1.5f;
-
-        public bool Sprinting => (HeldMoveButtons & MoveButtons.Walk) == 0x0;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool CanMove = true;

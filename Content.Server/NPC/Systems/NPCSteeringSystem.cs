@@ -124,7 +124,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         {
             foreach (var (comp, mover) in EntityQuery<NPCSteeringComponent, InputMoverComponent>())
             {
-                mover.CurTickSprintMovement = Vector2.Zero;
+                mover.CurTickJogMovement = Vector2.Zero;
                 comp.PathfindToken?.Cancel();
                 comp.PathfindToken = null;
             }
@@ -214,7 +214,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
 
         if (TryComp(uid, out InputMoverComponent? controller))
         {
-            controller.CurTickSprintMovement = Vector2.Zero;
+            controller.CurTickJogMovement = Vector2.Zero;
 
             var ev = new SpriteMoveEvent(false);
             RaiseLocalEvent(uid, ref ev);
@@ -271,7 +271,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
 
                 data.Add(new NPCSteeringDebugData(
                     GetNetEntity(uid),
-                    mover.CurTickSprintMovement,
+                    mover.CurTickJogMovement,
                     steering.Interest,
                     steering.Danger,
                     steering.DangerPoints));
@@ -293,7 +293,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
             Array.Clear(steering.Danger);
         }
 
-        component.CurTickSprintMovement = value;
+        component.CurTickJogMovement = value;
         component.LastInputTick = _timing.CurTick;
         component.LastInputSubTick = ushort.MaxValue;
 
@@ -343,7 +343,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         // Use rotation relative to parent to rotate our context vectors by.
         var offsetRot = -_mover.GetParentGridAngle(mover);
         _modifierQuery.TryGetComponent(uid, out var modifier);
-        var moveSpeed = GetSprintSpeed(uid, modifier);
+        var moveSpeed = GetJogSpeed(uid, modifier);
         var body = _physicsQuery.GetComponent(uid);
         var dangerPoints = steering.DangerPoints;
         dangerPoints.Clear();
@@ -482,13 +482,13 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
 
     // TODO: Move these to movercontroller
 
-    private float GetSprintSpeed(EntityUid uid, MovementSpeedModifierComponent? modifier = null)
+    private float GetJogSpeed(EntityUid uid, MovementSpeedModifierComponent? modifier = null)
     {
         if (!Resolve(uid, ref modifier, false))
         {
-            return MovementSpeedModifierComponent.DefaultBaseSprintSpeed;
+            return MovementSpeedModifierComponent.DefaultBaseJogSpeed;
         }
 
-        return modifier.CurrentSprintSpeed;
+        return modifier.CurrentJogSpeed;
     }
 }

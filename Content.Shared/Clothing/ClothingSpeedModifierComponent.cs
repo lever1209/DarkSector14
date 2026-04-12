@@ -14,6 +14,9 @@ public sealed partial class ClothingSpeedModifierComponent : Component
     public float WalkModifier = 1.0f;
 
     [DataField]
+    public float JogModifier = 1.0f;
+
+    [DataField]
     public float SprintModifier = 1.0f;
 
     /// <summary>

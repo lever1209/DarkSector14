@@ -259,9 +259,10 @@ public abstract partial class SharedMoverController : VirtualController
         {
             // Find the speed we should be moving at and make sure we're not trying to move faster than that
             var walkSpeed = moveSpeedComponent?.WeightlessWalkSpeed ?? MovementSpeedModifierComponent.DefaultBaseWalkSpeed;
+            var jogSpeed = moveSpeedComponent?.WeightlessJogSpeed ?? MovementSpeedModifierComponent.DefaultBaseJogSpeed;
             var sprintSpeed = moveSpeedComponent?.WeightlessSprintSpeed ?? MovementSpeedModifierComponent.DefaultBaseSprintSpeed;
 
-            wishDir = AssertValidWish(mover, walkSpeed, sprintSpeed);
+            wishDir = AssertValidWish(mover, walkSpeed, jogSpeed, sprintSpeed);
 
             var ev = new CanWeightlessMoveEvent(uid);
             RaiseLocalEvent(uid, ref ev, true);
@@ -297,9 +298,10 @@ public abstract partial class SharedMoverController : VirtualController
                 tileDef = (ContentTileDefinition)_tileDefinitionManager[tile.Tile.TypeId];
 
             var walkSpeed = moveSpeedComponent?.CurrentWalkSpeed ?? MovementSpeedModifierComponent.DefaultBaseWalkSpeed;
+            var jogSpeed = moveSpeedComponent?.CurrentJogSpeed ?? MovementSpeedModifierComponent.DefaultBaseJogSpeed;
             var sprintSpeed = moveSpeedComponent?.CurrentSprintSpeed ?? MovementSpeedModifierComponent.DefaultBaseSprintSpeed;
 
-            wishDir = AssertValidWish(mover, walkSpeed, sprintSpeed);
+            wishDir = AssertValidWish(mover, walkSpeed, jogSpeed, sprintSpeed);
 
             if (wishDir != Vector2.Zero)
             {
@@ -364,7 +366,16 @@ public abstract partial class SharedMoverController : VirtualController
             if (!weightless && MobMoverQuery.TryGetComponent(uid, out var mobMover) &&
                 TryGetSound(weightless, uid, mover, mobMover, xform, out var sound, tileDef: tileDef))
             {
-                var soundModifier = mover.Sprinting ? InputMoverComponent.SprintingSoundModifier : InputMoverComponent.WalkingSoundModifier;
+                var soundModifier = InputMoverComponent.JoggingSoundModifier;
+
+                if (mover.Sprinting)
+                {
+                    soundModifier = InputMoverComponent.SprintingSoundModifier;
+                }
+                else if (mover.Walking)
+                {
+                    soundModifier = InputMoverComponent.WalkingSoundModifier;
+                }
 
                 var audioParams = sound.Params
                     .WithVolume(sound.Params.Volume + soundModifier)
@@ -531,9 +542,17 @@ public abstract partial class SharedMoverController : VirtualController
             return false;
 
         var coordinates = xform.Coordinates;
-        var distanceNeeded = mover.Sprinting
-            ? mobMover.StepSoundMoveDistanceRunning
-            : mobMover.StepSoundMoveDistanceWalking;
+        var distanceNeeded = mobMover.StepSoundMoveDistanceJogging;
+
+        if (mover.Sprinting)
+        {
+            distanceNeeded = mobMover.StepSoundMoveDistanceSprinting;
+        }
+        else if (mover.Walking)
+        {
+            distanceNeeded = mobMover.StepSoundMoveDistanceWalking;
+        }
+
 
         // Handle footsteps.
         if (!weightless)
@@ -637,11 +656,11 @@ public abstract partial class SharedMoverController : VirtualController
         return sound != null;
     }
 
-    private Vector2 AssertValidWish(InputMoverComponent mover, float walkSpeed, float sprintSpeed)
+    private Vector2 AssertValidWish(InputMoverComponent mover, float walkSpeed, float jogSpeed, float sprintSpeed)
     {
-        var (walkDir, sprintDir) = GetVelocityInput(mover);
+        var (walkDir, jogDir, sprintDir) = GetVelocityInput(mover);
 
-        var total = walkDir * walkSpeed + sprintDir * sprintSpeed;
+        var total = walkDir * walkSpeed + jogDir * jogSpeed + sprintDir * sprintSpeed;
 
         var parentRotation = GetParentGridAngle(mover);
         var wishDir = _relativeMovement ? parentRotation.RotateVec(total) : total;

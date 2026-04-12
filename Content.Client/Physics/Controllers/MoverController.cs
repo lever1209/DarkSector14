@@ -114,14 +114,25 @@ public sealed class MoverController : SharedMoverController
         return _timing is { IsFirstTimePredicted: true, InSimulation: true };
     }
 
-    public override void SetSprinting(Entity<InputMoverComponent> entity, ushort subTick, bool walking)
+    public override void SetWalking(Entity<InputMoverComponent> entity, ushort subTick, bool walking)
     {
-        // Logger.Info($"[{_gameTiming.CurTick}/{subTick}] Sprint: {enabled}");
-        base.SetSprinting(entity, subTick, walking);
+        // Logger.Info($"[{_gameTiming.CurTick}/{subTick}] Walk: {enabled}");
+        base.SetWalking(entity, subTick, walking);
 
-        if (walking && _cfg.GetCVar(CCVars.ToggleWalk))
+        if (walking /*&& _cfg.GetCVar(CCVars.ToggleWalk)*/)
             _alerts.ShowAlert(entity.Owner, WalkingAlert, showCooldown: false, autoRemove: false);
         else
             _alerts.ClearAlert(entity.Owner, WalkingAlert);
+    }
+
+    public override void SetSprinting(Entity<InputMoverComponent> entity, ushort subTick, bool sprinting)
+    {
+        // Logger.Info($"[{_gameTiming.CurTick}/{subTick}] Sprint: {enabled}");
+        base.SetSprinting(entity, subTick, sprinting);
+
+        if (sprinting /*&& _cfg.GetCVar(CCVars.ToggleSprint)*/)
+            _alerts.ShowAlert(entity.Owner, SprintingAlert, showCooldown: false, autoRemove: false);
+        else
+            _alerts.ClearAlert(entity.Owner, SprintingAlert);
     }
 }
