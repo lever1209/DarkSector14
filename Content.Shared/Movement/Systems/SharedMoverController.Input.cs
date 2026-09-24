@@ -446,7 +446,7 @@ namespace Content.Shared.Movement.Systems
             {
                 walk += curDir;
             }
-            else if (mover.Jogging)
+            else
             {
                 jog += curDir;
             }
